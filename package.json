@@ -1,0 +1,44 @@
+{
+  "name": "hours-tracker",
+  "version": "1.0.0",
+  "description": "Desktop app to track Geotab on-duty hours and weekly earnings",
+  "main": "main.js",
+  "scripts": {
+    "dev:react": "vite",
+    "dev:electron": "wait-on http://localhost:5173 && electron .",
+    "dev": "concurrently \"npm run dev:react\" \"npm run dev:electron\"",
+    "build:react": "vite build",
+    "build": "npm run build:react && electron-builder",
+    "start": "electron ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.1",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^41.2.0",
+    "electron-builder": "^26.8.1",
+    "vite": "^8.0.8",
+    "wait-on": "^9.0.4"
+  },
+  "dependencies": {
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "react-router-dom": "^7.14.0"
+  },
+  "build": {
+    "appId": "com.hours-tracker",
+    "productName": "Hours Tracker",
+    "files": [
+      "main.js",
+      "preload.js",
+      "dist-react/**/*"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

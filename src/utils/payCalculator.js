@@ -1,72 +1,96 @@
-// Federal tax brackets for 2026 (approximate)
-const FEDERAL_BRACKETS = {
+// IRS 2026 Percentage Method Tables for Weekly payroll (Publication 15-T)
+// Step 1: Adjust for standard deduction (weekly portion)
+// Step 2: Apply marginal rates to adjusted wage
+const WEEKLY_STANDARD_DEDUCTION = {
+  single: 15000 / 52,            // ~$288.46/wk
+  married_jointly: 30000 / 52,   // ~$576.92/wk
+  married_separately: 15000 / 52,
+  head_of_household: 22500 / 52, // ~$432.69/wk
+};
+
+// IRS 2026 percentage method — weekly bracket tables
+// These are weekly amounts derived from the annual brackets
+const WEEKLY_TAX_BRACKETS = {
   single: [
-    { min: 0, max: 11925, rate: 0.10 },
-    { min: 11925, max: 48475, rate: 0.12 },
-    { min: 48475, max: 103350, rate: 0.22 },
-    { min: 103350, max: 197300, rate: 0.24 },
-    { min: 197300, max: 250525, rate: 0.32 },
-    { min: 250525, max: 626350, rate: 0.35 },
-    { min: 626350, max: Infinity, rate: 0.37 },
+    { min: 0, max: 229.33, rate: 0.10 },          // 11925/52
+    { min: 229.33, max: 932.21, rate: 0.12 },      // 48475/52
+    { min: 932.21, max: 1987.50, rate: 0.22 },     // 103350/52
+    { min: 1987.50, max: 3794.23, rate: 0.24 },    // 197300/52
+    { min: 3794.23, max: 4817.79, rate: 0.32 },    // 250525/52
+    { min: 4817.79, max: 12045.19, rate: 0.35 },   // 626350/52
+    { min: 12045.19, max: Infinity, rate: 0.37 },
   ],
   married_jointly: [
-    { min: 0, max: 23850, rate: 0.10 },
-    { min: 23850, max: 96950, rate: 0.12 },
-    { min: 96950, max: 206700, rate: 0.22 },
-    { min: 206700, max: 394600, rate: 0.24 },
-    { min: 394600, max: 501050, rate: 0.32 },
-    { min: 501050, max: 752800, rate: 0.35 },
-    { min: 752800, max: Infinity, rate: 0.37 },
+    { min: 0, max: 458.65, rate: 0.10 },           // 23850/52
+    { min: 458.65, max: 1864.42, rate: 0.12 },     // 96950/52
+    { min: 1864.42, max: 3975.00, rate: 0.22 },    // 206700/52
+    { min: 3975.00, max: 7588.46, rate: 0.24 },    // 394600/52
+    { min: 7588.46, max: 9635.58, rate: 0.32 },    // 501050/52
+    { min: 9635.58, max: 14476.92, rate: 0.35 },   // 752800/52
+    { min: 14476.92, max: Infinity, rate: 0.37 },
   ],
   married_separately: [
-    { min: 0, max: 11925, rate: 0.10 },
-    { min: 11925, max: 48475, rate: 0.12 },
-    { min: 48475, max: 103350, rate: 0.22 },
-    { min: 103350, max: 197300, rate: 0.24 },
-    { min: 197300, max: 250525, rate: 0.32 },
-    { min: 250525, max: 376400, rate: 0.35 },
-    { min: 376400, max: Infinity, rate: 0.37 },
+    { min: 0, max: 229.33, rate: 0.10 },
+    { min: 229.33, max: 932.21, rate: 0.12 },
+    { min: 932.21, max: 1987.50, rate: 0.22 },
+    { min: 1987.50, max: 3794.23, rate: 0.24 },
+    { min: 3794.23, max: 4817.79, rate: 0.32 },
+    { min: 4817.79, max: 7238.46, rate: 0.35 },    // 376400/52
+    { min: 7238.46, max: Infinity, rate: 0.37 },
   ],
   head_of_household: [
-    { min: 0, max: 17000, rate: 0.10 },
-    { min: 17000, max: 64850, rate: 0.12 },
-    { min: 64850, max: 103350, rate: 0.22 },
-    { min: 103350, max: 197300, rate: 0.24 },
-    { min: 197300, max: 250500, rate: 0.32 },
-    { min: 250500, max: 626350, rate: 0.35 },
-    { min: 626350, max: Infinity, rate: 0.37 },
+    { min: 0, max: 326.92, rate: 0.10 },           // 17000/52
+    { min: 326.92, max: 1247.12, rate: 0.12 },     // 64850/52
+    { min: 1247.12, max: 1987.50, rate: 0.22 },    // 103350/52
+    { min: 1987.50, max: 3794.23, rate: 0.24 },    // 197300/52
+    { min: 3794.23, max: 4817.31, rate: 0.32 },    // 250500/52
+    { min: 4817.31, max: 12045.19, rate: 0.35 },   // 626350/52
+    { min: 12045.19, max: Infinity, rate: 0.37 },
   ],
 };
 
 const SOCIAL_SECURITY_RATE = 0.062;
 const MEDICARE_RATE = 0.0145;
 
-export function calculateWeeklyGross(hours, payRate, overtimeThreshold, overtimeMultiplier) {
+export function calculateWeeklyGross(hours, payRate, overtimeThreshold, overtimeMultiplier, additionalPay = {}) {
   const regularHours = Math.min(hours, overtimeThreshold);
   const overtimeHours = Math.max(0, hours - overtimeThreshold);
   const regularPay = regularHours * payRate;
   const overtimePay = overtimeHours * payRate * overtimeMultiplier;
+
+  const holidayPay = additionalPay.holidayPay || 0;
+  const ptoPay = additionalPay.ptoPay || 0;
+  const travelPay = additionalPay.travelPay || 0;
+
   return {
     regularHours,
     overtimeHours,
     regularPay,
     overtimePay,
-    grossPay: regularPay + overtimePay,
+    holidayPay,
+    ptoPay,
+    travelPay,
+    grossPay: regularPay + overtimePay + holidayPay + ptoPay + travelPay,
   };
 }
 
-export function estimateFederalTax(annualTaxable, taxStatus) {
-  const brackets = FEDERAL_BRACKETS[taxStatus] || FEDERAL_BRACKETS.single;
+// IRS percentage method: apply weekly brackets to (gross - pretax - standard deduction)
+function estimateWeeklyFederalTax(weeklyTaxable, taxStatus) {
+  const brackets = WEEKLY_TAX_BRACKETS[taxStatus] || WEEKLY_TAX_BRACKETS.single;
+  const stdDeduction = WEEKLY_STANDARD_DEDUCTION[taxStatus] || WEEKLY_STANDARD_DEDUCTION.single;
+
+  const adjusted = Math.max(0, weeklyTaxable - stdDeduction);
+
   let tax = 0;
   for (const bracket of brackets) {
-    if (annualTaxable <= bracket.min) break;
-    const taxable = Math.min(annualTaxable, bracket.max) - bracket.min;
+    if (adjusted <= bracket.min) break;
+    const taxable = Math.min(adjusted, bracket.max) - bracket.min;
     tax += taxable * bracket.rate;
   }
   return tax;
 }
 
-export function calculateDeductions(grossPay, taxStatus, deductions = []) {
+export function calculateDeductions(grossPay, taxStatus, deductions = [], w4Credits = 0) {
   // Calculate pre-tax deductions first (they reduce taxable income for FICA and federal)
   let preTaxTotal = 0;
   let postTaxTotal = 0;
@@ -92,10 +116,10 @@ export function calculateDeductions(grossPay, taxStatus, deductions = []) {
   const socialSecurity = taxableIncome * SOCIAL_SECURITY_RATE;
   const medicare = taxableIncome * MEDICARE_RATE;
 
-  // Federal income tax (weekly portion of annual estimate)
-  const annualTaxable = taxableIncome * 52;
-  const annualFederalTax = estimateFederalTax(annualTaxable, taxStatus);
-  const federalTax = annualFederalTax / 52;
+  // Federal income tax using IRS percentage method (weekly)
+  // W-4 Step 3 credits (annual amount for dependents) reduce withholding
+  const weeklyCredit = w4Credits / 52;
+  const federalTax = Math.max(0, estimateWeeklyFederalTax(taxableIncome, taxStatus) - weeklyCredit);
 
   const totalDeductions = federalTax + socialSecurity + medicare + preTaxTotal + postTaxTotal;
   const netPay = grossPay - totalDeductions;

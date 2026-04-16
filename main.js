@@ -20,6 +20,7 @@ function loadSettings() {
     overtimeThreshold: 40,
     overtimeMultiplier: 1.5,
     taxStatus: 'single',
+    w4Credits: 0,
     deductions: [
       { name: 'Dental/Vision', type: 'flat', value: 6.35, preTax: true },
       { name: 'Medical', type: 'flat', value: 47.89, preTax: true },

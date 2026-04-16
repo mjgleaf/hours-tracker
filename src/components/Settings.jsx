@@ -138,17 +138,32 @@ export default function Settings({ settings, onSave, connected }) {
 
       <div className="card">
         <h3>Tax Status</h3>
-        <div className="form-group">
-          <label>Filing Status</label>
-          <select
-            value={form.taxStatus}
-            onChange={(e) => updateField(null, 'taxStatus', e.target.value)}
-          >
-            {TAX_STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+        <div className="form-grid">
+          <div className="form-group">
+            <label>Filing Status</label>
+            <select
+              value={form.taxStatus}
+              onChange={(e) => updateField(null, 'taxStatus', e.target.value)}
+            >
+              {TAX_STATUS_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="form-group">
+            <label>W-4 Step 3 Credits ($/year)</label>
+            <input
+              type="number"
+              step="1"
+              value={form.w4Credits ?? 0}
+              onChange={(e) => updateField(null, 'w4Credits', parseFloat(e.target.value) || 0)}
+              placeholder="e.g. 2000 per child under 17"
+            />
+          </div>
         </div>
+        <p className="help-text" style={{ marginTop: '8px' }}>
+          W-4 Step 3: $2,000 per child under 17, $500 per other dependent. Check your W-4 form.
+        </p>
       </div>
 
       <div className="card">

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { calculateWeeklyGross, calculateDeductions } from '../utils/payCalculator';
 
 function formatMoney(amount) {
@@ -12,6 +12,8 @@ function formatHours(hours) {
 }
 
 export default function Dashboard({ weeklyData, settings, loading, connected, onRefresh, onPreviousWeek, onNextWeek, onCurrentWeek, isCurrentWeek }) {
+  const [additionalPay, setAdditionalPay] = useState({ holidayPay: 0, ptoPay: 0, travelPay: 0 });
+
   if (!connected) {
     return (
       <div className="dashboard">
@@ -38,10 +40,10 @@ export default function Dashboard({ weeklyData, settings, loading, connected, on
   const totalHours = weeklyData?.totalHours || 0;
   const dailyBreakdown = weeklyData?.dailyBreakdown || [];
 
-  const { regularHours, overtimeHours, regularPay, overtimePay, grossPay } =
-    calculateWeeklyGross(totalHours, settings.payRate, settings.overtimeThreshold, settings.overtimeMultiplier);
+  const { regularHours, overtimeHours, regularPay, overtimePay, holidayPay, ptoPay, travelPay, grossPay } =
+    calculateWeeklyGross(totalHours, settings.payRate, settings.overtimeThreshold, settings.overtimeMultiplier, additionalPay);
 
-  const deductionResult = calculateDeductions(grossPay, settings.taxStatus, settings.deductions);
+  const deductionResult = calculateDeductions(grossPay, settings.taxStatus, settings.deductions, settings.w4Credits || 0);
 
   const weekStart = weeklyData?.weekStart
     ? new Date(weeklyData.weekStart).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -51,6 +53,8 @@ export default function Dashboard({ weeklyData, settings, loading, connected, on
   const weekEnd = weekEndDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   const maxDailyHours = Math.max(...dailyBreakdown.map((d) => d.hours), 1);
+
+  const hasAdditionalPay = holidayPay > 0 || ptoPay > 0 || travelPay > 0;
 
   return (
     <div className="dashboard">
@@ -85,6 +89,7 @@ export default function Dashboard({ weeklyData, settings, loading, connected, on
           <div className="card-detail">
             {formatMoney(regularPay)} regular
             {overtimePay > 0 && <> + {formatMoney(overtimePay)} OT</>}
+            {hasAdditionalPay && <> + {formatMoney(holidayPay + ptoPay + travelPay)} other</>}
           </div>
         </div>
 
@@ -100,18 +105,66 @@ export default function Dashboard({ weeklyData, settings, loading, connected, on
       <div className="card daily-chart">
         <h3>Daily Breakdown</h3>
         <div className="chart">
-          {dailyBreakdown.map((day, i) => (
-            <div className="chart-bar-group" key={i}>
-              <div className="chart-bar-label">{formatHours(day.hours)}</div>
-              <div className="chart-bar-container">
-                <div
-                  className="chart-bar"
-                  style={{ height: `${(day.hours / maxDailyHours) * 100}%` }}
-                ></div>
+          {dailyBreakdown.map((day, i) => {
+            const isZeroDay = day.hours < 0.1;
+            return (
+              <div className="chart-bar-group" key={i}>
+                <div className="chart-bar-label">
+                  {isZeroDay ? '—' : formatHours(day.hours)}
+                </div>
+                <div className="chart-bar-container">
+                  <div
+                    className="chart-bar"
+                    style={{ height: `${(day.hours / maxDailyHours) * 100}%` }}
+                  ></div>
+                </div>
+                <div className="chart-day-label">{day.dayName}</div>
+                {isZeroDay && day.dayName !== 'Sat' && day.dayName !== 'Sun' && (
+                  <div className="day-tag pto-tag">PTO/Holiday?</div>
+                )}
               </div>
-              <div className="chart-day-label">{day.dayName}</div>
-            </div>
-          ))}
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="card additional-pay-section">
+        <h3>Additional Pay (This Week)</h3>
+        <p className="help-text">Add holiday, PTO, or travel pay not tracked by Geotab.</p>
+        <div className="additional-pay-grid">
+          <div className="additional-pay-item">
+            <label>Holiday Pay ($)</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={additionalPay.holidayPay || ''}
+              placeholder="0.00"
+              onChange={(e) => setAdditionalPay((prev) => ({ ...prev, holidayPay: parseFloat(e.target.value) || 0 }))}
+            />
+          </div>
+          <div className="additional-pay-item">
+            <label>PTO Pay ($)</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={additionalPay.ptoPay || ''}
+              placeholder="0.00"
+              onChange={(e) => setAdditionalPay((prev) => ({ ...prev, ptoPay: parseFloat(e.target.value) || 0 }))}
+            />
+          </div>
+          <div className="additional-pay-item">
+            <label>Travel Pay ($)</label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={additionalPay.travelPay || ''}
+              placeholder="0.00"
+              onChange={(e) => setAdditionalPay((prev) => ({ ...prev, travelPay: parseFloat(e.target.value) || 0 }))}
+            />
+          </div>
         </div>
       </div>
 
@@ -160,6 +213,48 @@ export default function Dashboard({ weeklyData, settings, loading, connected, on
           </tbody>
         </table>
       </div>
+
+      {hasAdditionalPay && (
+        <div className="card earnings-breakdown">
+          <h3>Earnings Breakdown</h3>
+          <table>
+            <tbody>
+              <tr>
+                <td>Regular Pay ({formatHours(regularHours)})</td>
+                <td className="amount">{formatMoney(regularPay)}</td>
+              </tr>
+              {overtimePay > 0 && (
+                <tr>
+                  <td>Overtime Pay ({formatHours(overtimeHours)})</td>
+                  <td className="amount">{formatMoney(overtimePay)}</td>
+                </tr>
+              )}
+              {holidayPay > 0 && (
+                <tr>
+                  <td>Holiday Pay</td>
+                  <td className="amount">{formatMoney(holidayPay)}</td>
+                </tr>
+              )}
+              {ptoPay > 0 && (
+                <tr>
+                  <td>PTO Pay</td>
+                  <td className="amount">{formatMoney(ptoPay)}</td>
+                </tr>
+              )}
+              {travelPay > 0 && (
+                <tr>
+                  <td>Travel Pay</td>
+                  <td className="amount">{formatMoney(travelPay)}</td>
+                </tr>
+              )}
+              <tr className="total-row">
+                <td><strong>Gross Pay</strong></td>
+                <td className="amount"><strong>{formatMoney(grossPay)}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

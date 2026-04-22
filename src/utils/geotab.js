@@ -52,6 +52,53 @@ export async function getDriverId(server, credentials, username) {
   return null;
 }
 
+export async function getLogRecords(server, credentials, deviceId, fromDate, toDate) {
+  const result = await window.api.geotabCall({
+    server,
+    method: 'Get',
+    params: {
+      typeName: 'LogRecord',
+      credentials,
+      search: {
+        deviceSearch: { id: deviceId },
+        fromDate,
+        toDate,
+      },
+    },
+  });
+  return result || [];
+}
+
+export async function getAddresses(server, credentials, coordinates) {
+  if (!coordinates || coordinates.length === 0) return [];
+  const result = await window.api.geotabCall({
+    server,
+    method: 'GetAddresses',
+    params: { credentials, coordinates },
+  });
+  return result || [];
+}
+
+export async function getAllDrivers(server, credentials) {
+  const users = await window.api.geotabCall({
+    server,
+    method: 'Get',
+    params: {
+      typeName: 'User',
+      credentials,
+      search: { isDriver: true },
+    },
+  });
+  return (users || [])
+    .map((u) => ({
+      id: u.id,
+      name: u.name,
+      displayName:
+        [u.firstName, u.lastName].filter(Boolean).join(' ').trim() || u.name,
+    }))
+    .sort((a, b) => a.displayName.localeCompare(b.displayName));
+}
+
 // Parse .NET TimeSpan format: "HH:MM:SS.fffffff" or "D.HH:MM:SS.fffffff"
 function parseTimeSpanToHours(timeSpan) {
   if (!timeSpan) return 0;

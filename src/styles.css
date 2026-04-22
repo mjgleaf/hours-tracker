@@ -553,6 +553,156 @@ body {
   border: 1px solid #d29922;
 }
 
+/* Team Hours */
+.summary-cards.single {
+  grid-template-columns: 1fr;
+  max-width: 320px;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.status-row .status-dot {
+  width: 10px;
+  height: 10px;
+}
+
+.status-text {
+  font-weight: 600;
+  color: #e1e4e8;
+}
+
+.status-since {
+  color: #8b949e;
+  font-size: 12px;
+}
+
+.event-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.event-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #21262d;
+}
+
+.event-row:last-child {
+  border-bottom: none;
+}
+
+.event-row .status-dot {
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.event-body {
+  flex: 1;
+}
+
+.event-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.event-title strong {
+  color: #e1e4e8;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.event-time {
+  color: #8b949e;
+  font-size: 12px;
+}
+
+.event-location {
+  color: #8b949e;
+  font-size: 12px;
+}
+
+.punch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.punch-header h3 {
+  margin-bottom: 0;
+}
+
+.map-toggle-btn {
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.map-toggle-btn:hover {
+  background: #30363d;
+}
+
+.map-container {
+  height: 420px;
+  width: 100%;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  background: #0d1117;
+}
+
+.map-marker-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #0d1117;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.map-marker-on {
+  background: #3fb950;
+}
+
+.map-marker-off {
+  background: #f85149;
+}
+
+.leaflet-popup-content-wrapper {
+  background: #161b22;
+  color: #e1e4e8;
+  border-radius: 8px;
+}
+
+.leaflet-popup-content {
+  font-size: 12px;
+  margin: 10px 12px;
+  line-height: 1.5;
+}
+
+.leaflet-popup-tip {
+  background: #161b22;
+}
+
+.leaflet-container a.leaflet-popup-close-button {
+  color: #8b949e;
+}
+
 /* Earnings breakdown table (reuse deductions style) */
 .earnings-breakdown table {
   width: 100%;

@@ -1,6 +1,6 @@
 {
   "name": "hours-tracker",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Desktop app to track Geotab on-duty hours and weekly earnings",
   "main": "main.js",
   "scripts": {
@@ -25,6 +25,7 @@
     "wait-on": "^9.0.4"
   },
   "dependencies": {
+    "leaflet": "^1.9.4",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-router-dom": "^7.14.0"

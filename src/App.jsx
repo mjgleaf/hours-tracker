@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { HashRouter, Routes, Route, NavLink } from 'react-router-dom';
 import Dashboard from './components/Dashboard';
 import Settings from './components/Settings';
+import TeamHours from './components/TeamHours';
 import { authenticate, getDriverId, getDutyStatusAvailability, getDutyStatusLogs, buildWeeklyFromAvailability, buildWeeklyFromLogs, getWeekStart } from './utils/geotab';
 
 export default function App() {
@@ -131,6 +132,9 @@ export default function App() {
             <NavLink to="/" end className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
               Dashboard
             </NavLink>
+            <NavLink to="/team" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+              Team Hours
+            </NavLink>
             <NavLink to="/settings" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
               Settings
             </NavLink>
@@ -161,6 +165,16 @@ export default function App() {
                   onNextWeek={goToNextWeek}
                   onCurrentWeek={goToCurrentWeek}
                   isCurrentWeek={weekOffset === 0}
+                />
+              }
+            />
+            <Route
+              path="/team"
+              element={
+                <TeamHours
+                  connected={connected}
+                  credentials={credentials}
+                  server={settings?.geotab?.server}
                 />
               }
             />
